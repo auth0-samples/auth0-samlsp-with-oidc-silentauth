@@ -55,11 +55,11 @@
 1. Clone the repository from https://github.com/pushpabrol/samlsp
 
 
-2. Copy the ipd certificate file you downloaded under Auth0 IDP Setup - Step 7 and paste it in the certs folder and rename it as idp.pem
+2. Copy the ipd certificate file you downloaded under `Auth0 IDP Setup - Step 7` and paste it in the certs folder and rename it as idp.pem
 
-3. Add a hosts file entry into your computer - 127.0.0.1       sp.pushp.com
+3. Add a hosts file entry into your computer - `127.0.0.1       sp.pushp.com`
 
-4. In the folder run - npm install - this will install all the dependencies
+4. In the folder run - `npm install` - this will install all the dependencies
 
 5. Open index.js in an editor and set the top 4 variables
 ```
@@ -72,7 +72,7 @@ var api_audience = "<audience of the api - example urn:gateway:api >";
 6. Save the file
 
 7. run the node application by running `sudo node index.js` 
- - sudo just so as to run the application on port 443
+  - sudo just so as to run the application on port 443
 
 
 8. Open your browser and go to https://sp.pushp.com/login
