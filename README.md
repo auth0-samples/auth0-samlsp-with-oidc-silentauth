@@ -1,4 +1,6 @@
 # samlsp
+- This is an example of a simple Service Provider using Auth0 as an IDP. After logging into the Service Provider it allows the end user to use silent authentication to get an access_token to call their back end api.
+
 ## Setup
 
 ###Auth0 ( IDP) Setup
