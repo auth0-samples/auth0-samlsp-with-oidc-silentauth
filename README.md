@@ -33,17 +33,18 @@
   - https://sp.pushp.com/login as an allowed logout url
   - https://sp.pushp.com/silentauth-callback under Allowed Origins
 
-Added screen shot just for reference...
+
 
 
 ###Create a new Resource Server within Auth0
 
 1. Go to https://manage.auth0.com/#/apis
 2. Create a new API with following settings
+  - Identifier : urn:gateway:api
+  - Allow Skipping User Consent : true
+  - Signing Algorithm - RS256
 
 3. Copy the Identifier - urn:gateway:api
-
-
 
 
 ###Service Provider Setup
