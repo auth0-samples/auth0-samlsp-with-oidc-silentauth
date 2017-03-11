@@ -22,7 +22,7 @@
   "signatureAlgorithm": "rsa-sha256"
 }
 ```
-
+and save the settings
 
 5. Enable Username-Password-Authentication as a connection for the Application
 
