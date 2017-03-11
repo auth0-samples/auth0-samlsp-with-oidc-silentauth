@@ -60,12 +60,12 @@
 4. In the folder run - npm install - this will install all the dependencies
 
 5. Open index.js in an editor and set the top 4 variables
-
+```
 var sp_domain = 'sp.pushp.com';
 var auth0_client_id = "client_id of the application in Auth0";
 var auth0_domain = "<auth0_domain>";
 var api_audience = "<audience of the api - example urn:gateway:api >";
-
+```
 
 6. Save the file
 
