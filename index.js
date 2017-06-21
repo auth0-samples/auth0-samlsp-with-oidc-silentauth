@@ -1,14 +1,14 @@
-var sp_domain = 'sp.pushp.com';
-var auth0_client_id = "T2muy88Sg93pi9Q7iCjx9JT1c62jPdid";
-var auth0_domain = "pushp.auth0.com";
-var api_audience = "http://mynodeapi";
+require('dotenv').config();
 var saml2 = require('saml2-js');
 var fs = require('fs');
 var express = require('express');
 var app = express();
 var ejs = require('ejs');
+var morgan = require('morgan');
 var bodyParser = require('body-parser')
 app.use(bodyParser.urlencoded({ extended: false }))
+
+app.use(morgan('dev'));
 
 function hereDoc(f) {
   return f.toString().
@@ -19,19 +19,20 @@ function hereDoc(f) {
 // parse application/json
 app.use(bodyParser.json())
 https = require('https');
+// https = require('https');
 // Create service provider
 var sp_options = {
-  entity_id: "https://" + sp_domain + "/metadata.xml",
+  entity_id: "https://" + process.env.SP_DOMAIN + "/metadata.xml",
   private_key: fs.readFileSync("./certs/sp.pem").toString(),
   certificate: fs.readFileSync("./certs/sp.crt").toString(),
-  assert_endpoint: "https://" + sp_domain + "/assert"
+  assert_endpoint: "https://" + process.env.SP_DOMAIN + "/assert"
 };
 var sp = new saml2.ServiceProvider(sp_options);
 
 // Create identity provider
 var idp_options = {
-  sso_login_url: "https://" + auth0_domain + "/samlp/" + auth0_client_id,
-  sso_logout_url: "https://" + auth0_domain + "/samlp/" + auth0_client_id + "/logout",
+  sso_login_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID,
+  sso_logout_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID + "/logout",
   certificates: [fs.readFileSync("./certs/idp.pem").toString()]
 };
 var idp = new saml2.IdentityProvider(idp_options);
@@ -73,18 +74,17 @@ app.post("/assert", function(req, res) {
     var name = saml_response.user.name;
     var email = saml_response.user.email;
 
-          res.header('Content-Type', 'text/html');
-          res.end(ejs.render(hereDoc(assertForm), {
-          nameid: saml_response.user.name_id,
-          sessionIndex: session_index,
-          name: name,
-          email: email,
-          sp_domain : sp_domain,
-          auth0_client_id: auth0_client_id,
-          auth0_domain: auth0_domain,
-          api_audience: api_audience
-          
-  }));
+    res.header('Content-Type', 'text/html');
+    res.end(ejs.render(hereDoc(assertForm), {
+      nameid: saml_response.user.name_id,
+      sessionIndex: session_index,
+      name: name,
+      email: email,
+      sp_domain: process.env.SP_DOMAIN,
+      auth0_client_id: process.env.AUTH0_CLIENT_ID,
+      auth0_domain: process.env.AUTH0_DOMAIN,
+      api_audience: process.env.API_AUDIENCE          
+    }));
 
   });
 });
@@ -103,18 +103,21 @@ app.get("/logout", function(req, res) {
   });
 });
 
-app.get("/silentauth-callback",function(req,res){
+app.get("/silentauth-callback",function(req,res) {
 
-          res.header('Content-Type', 'text/html');
-          res.end(ejs.render(hereDoc(silentAuthCallback), {
-          sp_domain : sp_domain,
-          auth0_client_id: auth0_client_id,
-          auth0_domain: auth0_domain,
-          api_audience: api_audience
-          
+  res.header('Content-Type', 'text/html');
+  res.end(ejs.render(hereDoc(silentAuthCallback), {
+    sp_domain : process.env.SP_DOMAIN,
+    auth0_client_id: process.env.AUTH0_CLIENT_ID,
+    auth0_domain: process.env.AUTH0_DOMAIN,
+    api_audience: process.env.API_AUDIENCE          
   }));
 
 });
+
+// app.listen(5000, function () {
+//   console.log("Express server listening on port 5000");
+// });
 
 var secureServer = https.createServer({
     key: fs.readFileSync('./certs/server.key'),
@@ -137,36 +140,31 @@ function assertForm() {
     <link rel="stylesheet" type="text/css" href="//cdn.auth0.com/styleguide/1/index.css">
 
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="https://cdn.auth0.com/w2/auth0-7.6.js"></script>
+    <script src="https://cdn.auth0.com/js/auth0/8.7/auth0.min.js"></script>
     <script type="text/javascript">
-        var auth0 = new Auth0({
+        var webAuth = new auth0.WebAuth({
             domain:       '<%-auth0_domain%>',
             clientID:     '<%-auth0_client_id%>',
-            callbackURL: 'https://<%-sp_domain%>/assert',
-            responseType: 'token id_token'
         });
 
-        // callback redirect?
-        var result = auth0.parseHash(window.location.hash);
-        console.log(result);
-        if (result && result.accessToken) {
-        window.localStorage.setItem('com.pushp.auth.accessToken', result.accessToken);
-            auth0.getUserInfo(result.accessToken, function (err, profile) {
-              window.location.hash = "";
+        // OAuth2 callback redirect?
+        webAuth.parseHash(window.location.hash, function(err, data) {
+          if (err) {
+            return alert('error parsing the hash: ' + JSON.stringify(err));
+          }
+
+          if (data) {
+            window.localStorage.setItem('com.pushp.auth.accessToken', data.accessToken);
+            webAuth.client.userInfo(authResult.accessToken, function(err, user) {
               if (err) {
                 return alert('error fetching profile: ' + JSON.stringify(err));
               }
+
               console.log(profile);
-                alert('hello ' + profile.name);
+              alert('hello ' + profile.name);          
             });
-        } else if (result && result.error) {
-          alert('error at login: ' + result.error)
-        }
-
-        // auth0.getSSOData(false, function(err, data){
-        //     console.log(data);
-        // });
-
+          }
+        });
     </script>
 
 </head>
@@ -185,14 +183,14 @@ function assertForm() {
                       var nonce = + new Date()
                       var str = nonce + "";
                       window.localStorage.setItem('com.pushp.auth.nonce', str);
-                    auth0.silentAuthentication({
-                    connection: 'Username-Password-Authentication',
+                    webAuth.renewAuth({
                         scope: 'openid profile',
                         audience: '<%-api_audience%>',
                         state: 'daddy',
                         nonce: str,
-                        usePostMessage:true, 
-                        callbackURL:'https://<%-sp_domain%>/silentauth-callback'}, function(err, result){
+                        usePostMessage: true, 
+                        redirectUri: 'https://<%-sp_domain%>/silentauth-callback'
+                      }, function(err, result){
                           console.log(result);
                         if (err) {
                             alert("something went wrong: " + (err.message || err.error));
@@ -201,7 +199,7 @@ function assertForm() {
                         }
                         $('.token').text(result.accessToken);
                         window.localStorage.setItem('com.pushp.auth.accessToken', result.accessToken);
-                        auth0.getUserInfo(result.accessToken, function (err, profile) {
+                        webAuth.client.userInfo(result.accessToken, function (err, profile) {
                           if (err) {
                             return alert('error fetching profile: ' + JSON.stringify(err));
                           }
@@ -219,7 +217,7 @@ function assertForm() {
                 $('.logout-user').click(function (e) {
                     e.preventDefault();
                     window.localStorage.removeItem('com.pushp.auth.accessToken');
-                    auth0.logout({client_id:'<%-auth0_client_id%>', returnTo: 'https://<%-sp_domain%>/login', federate: true});
+                    webAuth.logout({client_id:'<%-auth0_client_id%>', returnTo: 'https://<%-sp_domain%>/login', federate: true});
                 });
             </script>
         </div>
@@ -240,20 +238,15 @@ function silentAuthCallback() {
 <html>
   <head>
 
-    <script src="https://cdn.auth0.com/w2/auth0-7.6.min.js"></script>
+    <script src="https://cdn.auth0.com/js/auth0/8.7/auth0.min.js"></script>
     <script>
-      var auth0 = new Auth0({
-            domain:       '<%-auth0_domain%>',
-            clientID:     '<%-auth0_client_id%>',
-            responseType: 'token id_token'
+      var webAuth = new auth0.WebAuth({
+        domain:       '<%-auth0_domain%>',
+        clientID:     '<%-auth0_client_id%>'
       });
-      var nonce = window.localStorage.getItem('com.pushp.auth.nonce');
-      console.log(nonce);
-      var result = auth0.parseHash(window.location.hash, {nonce: nonce});
-      console.log(result);
-      if (result) {
-        parent.postMessage(result, "https://<%-sp_domain%>/assert"); 
-      }
+      webAuth.parseHash(window.location.hash, function(err, data) {
+        parent.postMessage(err || data, "https://<%-sp_domain%>/assert");
+      });
     </script>
   </head>
   <body></body>
