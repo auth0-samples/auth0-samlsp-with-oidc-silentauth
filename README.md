@@ -48,6 +48,7 @@ This is an example of a simple SAML Service Provider using Auth0 as an IDP. Afte
    - Identifier : `urn:gateway:api`
    - Allow Skipping User Consent: true
    - Signing Algorithm: RS256
+   - Scopes: `read:foo`
 
 3. Add the following scope to the API:
    - Name: `read:foo`

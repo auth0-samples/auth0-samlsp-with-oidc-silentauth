@@ -1,0 +1,74 @@
+<script type="text/javascript">
+  // OAuth2 callback redirect?
+  webAuth.parseHash(window.location.hash, function(err, data) {
+    if (err) {
+      return alert('error parsing the hash: ' + JSON.stringify(err));
+    }
+
+    if (data) {
+      window.localStorage.setItem('access_token', data.accessToken);
+      webAuth.client.userInfo(authResult.accessToken, function(err, user) {
+        if (err) {
+          return alert('error fetching profile: ' + JSON.stringify(err));
+        }
+
+        console.log(profile);
+        alert('hello ' + profile.name);          
+      });
+    }
+  });
+    
+  // UI event handlers
+  $(function () {
+    $('#silentauth-user').click(function (e) {
+      e.preventDefault();      
+
+      webAuth.renewAuth({
+        scope: 'openid profile read:foo',
+        audience: '<%= api_audience %>',
+        responseType: 'token',
+        state: 'daddy',
+        usePostMessage: true, 
+        redirectUri: 'https://<%= sp_domain %>/silentauth-callback'
+      }, function(err, result){
+        console.log(result);
+        if (err) {
+          alert("something went wrong: " + (err.message || err.error));
+          if (err.error === 'login_required')  $('.login').click();
+          return;
+        }
+
+        $('#token').text(result.accessToken);
+        window.localStorage.setItem('access_token', result.accessToken);
+
+        webAuth.client.userInfo(result.accessToken, function (err, profile) {
+          if (err) {
+            return alert('error fetching profile: ' + JSON.stringify(err));
+          }
+          alert('hello, ' + profile.name + ', your access_token was obtained silently.');
+        });
+      });
+    });
+
+    $('#logout-user').click(function (e) {
+      e.preventDefault();
+      window.localStorage.removeItem('access_token');
+      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: 'https://<%= sp_domain%>/login', federate: true});
+    });
+  });
+</script>
+
+<div class="row">
+  <div class="col-xs-12">
+    <h4>Hi <%= email %>, Your SAML session Index: <%= sessionIndex %> and your name_id: <%= nameid %></h4>
+    <input type="button" class="btn btn-default" id="silentauth-user" value="Get Token for calling API" />
+    <br/>
+    <label for='token'>Access Token</label>
+    <pre id='token'></pre>
+  </div>
+
+  <div class="col-xs-6">
+    <h2>Logout</h2>
+    <input type="button" class="btn btn-default" id="logout-user" value="Logout" />
+  </div>
+</div>
