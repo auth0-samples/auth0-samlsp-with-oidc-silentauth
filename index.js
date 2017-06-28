@@ -23,8 +23,7 @@ app.set("layout extractScripts", true);
 
 // parse application/json
 app.use(bodyParser.json())
-https = require('https');
-// https = require('https');
+
 // Create service provider
 var sp_options = {
   entity_id: "https://" + process.env.SP_DOMAIN + "/metadata.xml",
@@ -116,6 +115,7 @@ app.get("/silentauth-callback", function(req,res) {
   });
 });
 
+https = require('https');
 var secureServer = https.createServer({
   key: fs.readFileSync('./certs/server.key'),
   cert: fs.readFileSync('./certs/server.crt'),

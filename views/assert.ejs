@@ -46,14 +46,18 @@
           return;
         }
 
-        $('#token').text(authResult.accessToken);
-        window.localStorage.setItem('access_token', authResult.accessToken);
-
         webAuth.client.userInfo(authResult.accessToken, function (err, profile) {
           if (err) {
             return alert('error fetching profile: ' + JSON.stringify(err));
           }
-          alert('hello, ' + profile.name + ', your access_token was obtained silently.');
+
+          window.localStorage.setItem('access_token', authResult.accessToken);
+          window.localStorage.setItem('profile', JSON.stringify(profile));
+
+          $('#token').text(authResult.accessToken);
+          $('#profile').text(JSON.stringify(profile, null, '  '));
+
+          $('#token_row').removeClass('hidden');
         });
       });
     });
@@ -61,22 +65,43 @@
     $('#logout-user').click(function (e) {
       e.preventDefault();
       window.localStorage.removeItem('access_token');
-      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: 'https://<%= sp_domain%>/login', federate: true});
+      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: 'https://<%= sp_domain%>/', federate: true});
     });
   });
 </script>
 
 <div class="row">
-  <div class="col-xs-12">
-    <h4>Hi <%= email %>, Your SAML session Index: <%= sessionIndex %> and your name_id: <%= nameid %></h4>
-    <input type="button" class="btn btn-default" id="silentauth-user" value="Get Token for calling API" />
-    <br/>
-    <label for='token'>Access Token</label>
-    <pre id='token'></pre>
+  <div class="col-sm-12">
+    <h1>SAML SP with OIDC Slient Authentication</h1>
+    <h2>Hi <%= email %></h2>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-sm-6">
+    <h3>SAML Session Index</h3>
+    <pre><%= sessionIndex %></pre>
+    <h3>SAML name_id</h3>
+    <pre><%= nameid %></pre>
   </div>
 
-  <div class="col-xs-6">
-    <h2>Logout</h2>
+  <div class="col-sm-6">
+    <input type="button" class="btn btn-default" id="silentauth-user" value="Get Access Token &amp; Fetch Profile" /><br>
+    <br>
     <input type="button" class="btn btn-default" id="logout-user" value="Logout" />
+  </div>
+</div>
+
+<div id="token_row" class="row hidden">
+  <div class="col-sm-6">
+    <h3>Access Token</h3>
+    (also in <code>localStorage</code>)
+    <pre id="token"></pre>
+  </div>
+
+  <div class="col-sm-6">
+    <h3>User Profile</h3>
+    (also in <code>localStorage</code>)
+    <pre id="profile"></pre>
   </div>
 </div>
