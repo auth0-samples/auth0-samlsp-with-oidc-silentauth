@@ -1,23 +1,4 @@
 <script type="text/javascript">
-  // OAuth2 callback redirect?
-  webAuth.parseHash(window.location.hash, function(err, data) {
-    if (err) {
-      return alert('error parsing the hash: ' + JSON.stringify(err));
-    }
-
-    if (data) {
-      window.localStorage.setItem('access_token', data.accessToken);
-      webAuth.client.userInfo(authResult.accessToken, function(err, user) {
-        if (err) {
-          return alert('error fetching profile: ' + JSON.stringify(err));
-        }
-
-        console.log(profile);
-        alert('hello ' + profile.name);          
-      });
-    }
-  });
-
   function guid() {
     function s4() {
       return Math.floor((1 + Math.random()) * 0x10000)
