@@ -17,31 +17,53 @@
       });
     }
   });
+
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  } 
     
   // UI event handlers
   $(function () {
     $('#silentauth-user').click(function (e) {
       e.preventDefault();      
 
+      // generate and store state value
+      var state = guid();
+      window.localStorage.setItem('state', state);
+
       webAuth.renewAuth({
         scope: 'openid profile read:foo',
         audience: '<%= api_audience %>',
         responseType: 'token',
-        state: 'daddy',
+        state: state,
         usePostMessage: true, 
         redirectUri: 'https://<%= sp_domain %>/silentauth-callback'
-      }, function(err, result){
-        console.log(result);
+      }, function(err, authResult){
+        console.log('authResult:', authResult);
+
+        var requiredState = window.localStorage.getItem('state');
+        window.localStorage.removeItem('state');
+
+        if (authResult && authResult.state !== requiredState) {
+          err = { error: 'invalid_state', errorDescription: 'The OAuth2 state does not match' };
+        }
+              
         if (err) {
           alert("something went wrong: " + (err.message || err.error));
           if (err.error === 'login_required')  $('.login').click();
           return;
         }
 
-        $('#token').text(result.accessToken);
-        window.localStorage.setItem('access_token', result.accessToken);
+        $('#token').text(authResult.accessToken);
+        window.localStorage.setItem('access_token', authResult.accessToken);
 
-        webAuth.client.userInfo(result.accessToken, function (err, profile) {
+        webAuth.client.userInfo(authResult.accessToken, function (err, profile) {
           if (err) {
             return alert('error fetching profile: ' + JSON.stringify(err));
           }

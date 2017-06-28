@@ -1,5 +1,3 @@
 <script type="text/javascript">
-  webAuth.parseHash(window.location.hash, function(err, data) {
-    parent.postMessage(err || data, "https://<%= sp_domain %>/assert");
-  });  
+  parent.postMessage(window.location.hash, "https://<%= sp_domain %>/assert");
 </script>
