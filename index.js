@@ -52,10 +52,7 @@ app.get("/metadata.xml", function(req, res) {
 });
 
 app.get('/', function (req, res) {
-  res.render('index', {
-    auth0_domain: process.env.AUTH0_DOMAIN,
-    auth0_client_id: process.env.AUTH0_CLIENT_ID
-  });
+  res.render('index');
 });
 
 // Starting point for login
@@ -115,8 +112,6 @@ app.get("/logout", function(req, res) {
 
 app.get("/silentauth-callback", function(req,res) {
   res.render('silentauth-callback', { 
-    auth0_domain: process.env.AUTH0_DOMAIN,
-    auth0_client_id: process.env.AUTH0_CLIENT_ID,
     sp_domain : process.env.SP_DOMAIN
   });
 });

@@ -1,4 +1,9 @@
 <script type="text/javascript">
+  var webAuth = new auth0.WebAuth({
+    domain:       '<%= auth0_domain %>',
+    clientID:     '<%= auth0_client_id %>',
+  });
+
   function guid() {
     function s4() {
       return Math.floor((1 + Math.random()) * 0x10000)
