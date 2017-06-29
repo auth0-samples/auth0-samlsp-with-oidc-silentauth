@@ -41,7 +41,7 @@
         }
               
         if (err) {
-          alert("something went wrong: " + (err.message || err.error));
+          alert('something went wrong: ' + (err.message || err.error));
           if (err.error === 'login_required')  $('.login').click();
           return;
         }

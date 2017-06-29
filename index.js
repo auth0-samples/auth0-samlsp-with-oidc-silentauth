@@ -21,32 +21,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 app.use(ejsLayouts);
-app.set("layout extractScripts", true);
+app.set('layout extractScripts', true);
 
 // parse application/json
 app.use(bodyParser.json())
 
 // Create service provider
 var sp_options = {
-  entity_id: "http://" + process.env.SP_DOMAIN + ":" + PORT + "/metadata.xml",
-  // private_key: fs.readFileSync("./certs/sp.pem").toString(),
-  // certificate: fs.readFileSync("./certs/sp.crt").toString(),
-  assert_endpoint: "http://" + process.env.SP_DOMAIN + ":" + PORT + "/assert"
+  entity_id: 'http://' + process.env.SP_DOMAIN + ':' + PORT + '/metadata.xml',
+  assert_endpoint: 'http://' + process.env.SP_DOMAIN + ':' + PORT + '/assert'
 };
 var sp = new saml2.ServiceProvider(sp_options);
 
 // Create identity provider
 var idp_options = {
-  sso_login_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID,
-  sso_logout_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID + "/logout",
-  certificates: [fs.readFileSync("./idp.pem").toString()]
+  sso_login_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_CLIENT_ID,
+  sso_logout_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_CLIENT_ID + '/logout',
+  certificates: [fs.readFileSync('./idp.pem').toString()]
 };
 var idp = new saml2.IdentityProvider(idp_options);
 
 // ------ Define express endpoints ------
 
 // Endpoint to retrieve metadata
-app.get("/metadata.xml", function(req, res) {
+app.get('/metadata.xml', function(req, res) {
   res.type('application/xml');
   res.send(sp.create_metadata());
 });
@@ -56,7 +54,7 @@ app.get('/', function (req, res) {
 });
 
 // Starting point for login
-app.get("/login", function(req, res) {
+app.get('/login', function(req, res) {
   sp.create_login_request_url(idp, {}, function(err, login_url, request_id) {
     if (err != null)
       return res.send(500);
@@ -65,7 +63,7 @@ app.get("/login", function(req, res) {
 });
 
 // Assert endpoint for when login completes
-app.post("/assert", function(req, res) {
+app.post('/assert', function(req, res) {
   var options = {
     request_body: req.body, 
     allow_unencrypted_assertion : true, 
@@ -101,7 +99,7 @@ app.post("/assert", function(req, res) {
 });
 
 // Starting point for logout
-app.get("/logout", function(req, res) {
+app.get('/logout', function(req, res) {
   var options = {
     name_id: name_id,
     session_index: session_index
@@ -114,7 +112,7 @@ app.get("/logout", function(req, res) {
   });
 });
 
-app.get("/silentauth-callback", function(req,res) {
+app.get('/silentauth-callback', function(req,res) {
   res.render('silentauth-callback', { 
     base_url: 'http://' + process.env.SP_DOMAIN + ':' + PORT
   });
