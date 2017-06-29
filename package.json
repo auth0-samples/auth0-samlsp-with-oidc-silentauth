@@ -7,8 +7,8 @@
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Auth0",
+  "license": "MIT",
   "dependencies": {
     "body-parser": "^1.17.1",
     "dotenv": "^4.0.0",
