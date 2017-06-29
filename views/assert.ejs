@@ -1,0 +1,107 @@
+<script type="text/javascript">
+  var webAuth = new auth0.WebAuth({
+    domain:       '<%= auth0_domain %>',
+    clientID:     '<%= auth0_client_id %>',
+  });
+
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  } 
+    
+  // UI event handlers
+  $(function () {
+    $('#silentauth-user').click(function (e) {
+      e.preventDefault();      
+
+      // generate and store state value
+      var state = guid();
+      window.localStorage.setItem('state', state);
+
+      webAuth.renewAuth({
+        scope: 'openid profile read:foo',
+        audience: '<%= api_audience %>',
+        responseType: 'token',
+        state: state,
+        usePostMessage: true, 
+        redirectUri: '<%= base_url %>/silentauth-callback'
+      }, function(err, authResult){
+        console.log('authResult:', authResult);
+
+        var requiredState = window.localStorage.getItem('state');
+        window.localStorage.removeItem('state');
+
+        if (authResult && authResult.state !== requiredState) {
+          err = { error: 'invalid_state', errorDescription: 'The OAuth2 state does not match' };
+        }
+              
+        if (err) {
+          alert('something went wrong: ' + (err.message || err.error));
+          if (err.error === 'login_required')  $('.login').click();
+          return;
+        }
+
+        webAuth.client.userInfo(authResult.accessToken, function (err, profile) {
+          if (err) {
+            return alert('error fetching profile: ' + JSON.stringify(err));
+          }
+
+          window.localStorage.setItem('access_token', authResult.accessToken);
+          window.localStorage.setItem('profile', JSON.stringify(profile));
+
+          $('#token').text(authResult.accessToken);
+          $('#profile').text(JSON.stringify(profile, null, '  '));
+
+          $('#token_row').removeClass('hidden');
+        });
+      });
+    });
+
+    $('#logout-user').click(function (e) {
+      e.preventDefault();
+      window.localStorage.removeItem('access_token');
+      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: '<%= base_url%>/', federate: true});
+    });
+  });
+</script>
+
+<div class="row">
+  <div class="col-sm-12">
+    <h1>SAML SP with OIDC Slient Authentication</h1>
+    <h2>Hi <%= email %></h2>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-sm-6">
+    <h3>SAML Session Index</h3>
+    <pre><%= sessionIndex %></pre>
+    <h3>SAML name_id</h3>
+    <pre><%= nameid %></pre>
+  </div>
+
+  <div class="col-sm-6">
+    <input type="button" class="btn btn-default" id="silentauth-user" value="Get Access Token &amp; Fetch Profile" /><br>
+    <br>
+    <input type="button" class="btn btn-default" id="logout-user" value="Logout" />
+  </div>
+</div>
+
+<div id="token_row" class="row hidden">
+  <div class="col-sm-6">
+    <h3>Access Token</h3>
+    (also in <code>localStorage</code>)
+    <pre id="token"></pre>
+  </div>
+
+  <div class="col-sm-6">
+    <h3>User Profile</h3>
+    (also in <code>localStorage</code>)
+    <pre id="profile"></pre>
+  </div>
+</div>
