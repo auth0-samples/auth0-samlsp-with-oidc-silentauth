@@ -35,8 +35,8 @@ var sp = new saml2.ServiceProvider(sp_options);
 
 // Create identity provider
 var idp_options = {
-  sso_login_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_CLIENT_ID,
-  sso_logout_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_CLIENT_ID + '/logout',
+  sso_login_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_SP_CLIENT_ID,
+  sso_logout_url: 'https://' + process.env.AUTH0_DOMAIN + '/samlp/' + process.env.AUTH0_SP_CLIENT_ID + '/logout',
   certificates: [fs.readFileSync('./idp.pem').toString()]
 };
 var idp = new saml2.IdentityProvider(idp_options);
@@ -87,7 +87,8 @@ app.post('/assert', function(req, res) {
 
     res.render('assert', { 
       auth0_domain: process.env.AUTH0_DOMAIN,
-      auth0_client_id: process.env.AUTH0_CLIENT_ID,
+      auth0_sp_client_id: process.env.AUTH0_SP_CLIENT_ID,
+      auth0_frontend_client_id: process.env.AUTH0_FRONTEND_CLIENT_ID,
       api_audience: process.env.API_AUDIENCE,          
       nameid: saml_response.user.name_id,
       sessionIndex: session_index,

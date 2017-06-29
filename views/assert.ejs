@@ -1,7 +1,7 @@
 <script type="text/javascript">
   var webAuth = new auth0.WebAuth({
     domain:       '<%= auth0_domain %>',
-    clientID:     '<%= auth0_client_id %>',
+    clientID:     '<%= auth0_frontend_client_id %>',
   });
 
   function guid() {
@@ -65,7 +65,7 @@
     $('#logout-user').click(function (e) {
       e.preventDefault();
       window.localStorage.removeItem('access_token');
-      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: '<%= base_url%>/', federate: true});
+      webAuth.logout({client_id:'<%= auth0_sp_client_id%>', returnTo: '<%= base_url%>/', federate: true});
     });
   });
 </script>
