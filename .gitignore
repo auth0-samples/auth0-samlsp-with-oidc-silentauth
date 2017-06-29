@@ -39,4 +39,4 @@ npm-debug.log
 .vscode
 
 # Your Auth0 (IDP) Certificate
-certs/idp.pem
+idp.pem

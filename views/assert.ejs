@@ -29,7 +29,7 @@
         responseType: 'token',
         state: state,
         usePostMessage: true, 
-        redirectUri: 'https://<%= sp_domain %>/silentauth-callback'
+        redirectUri: '<%= base_url %>/silentauth-callback'
       }, function(err, authResult){
         console.log('authResult:', authResult);
 
@@ -65,7 +65,7 @@
     $('#logout-user').click(function (e) {
       e.preventDefault();
       window.localStorage.removeItem('access_token');
-      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: 'https://<%= sp_domain%>/', federate: true});
+      webAuth.logout({client_id:'<%= auth0_client_id%>', returnTo: '<%= base_url%>/', federate: true});
     });
   });
 </script>

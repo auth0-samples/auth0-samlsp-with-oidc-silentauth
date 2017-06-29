@@ -8,8 +8,10 @@ var ejs = require('ejs');
 var ejsLayouts = require('express-ejs-layouts');
 var morgan = require('morgan');
 var bodyParser = require('body-parser')
-app.use(bodyParser.urlencoded({ extended: false }))
 
+var PORT = process.env.PORT || 5000;
+
+app.use(bodyParser.urlencoded({ extended: false }))
 app.use(morgan('dev'));
 
 // static files
@@ -26,10 +28,10 @@ app.use(bodyParser.json())
 
 // Create service provider
 var sp_options = {
-  entity_id: "https://" + process.env.SP_DOMAIN + "/metadata.xml",
-  private_key: fs.readFileSync("./certs/sp.pem").toString(),
-  certificate: fs.readFileSync("./certs/sp.crt").toString(),
-  assert_endpoint: "https://" + process.env.SP_DOMAIN + "/assert"
+  entity_id: "http://" + process.env.SP_DOMAIN + ":" + PORT + "/metadata.xml",
+  // private_key: fs.readFileSync("./certs/sp.pem").toString(),
+  // certificate: fs.readFileSync("./certs/sp.crt").toString(),
+  assert_endpoint: "http://" + process.env.SP_DOMAIN + ":" + PORT + "/assert"
 };
 var sp = new saml2.ServiceProvider(sp_options);
 
@@ -37,7 +39,7 @@ var sp = new saml2.ServiceProvider(sp_options);
 var idp_options = {
   sso_login_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID,
   sso_logout_url: "https://" + process.env.AUTH0_DOMAIN + "/samlp/" + process.env.AUTH0_CLIENT_ID + "/logout",
-  certificates: [fs.readFileSync("./certs/idp.pem").toString()]
+  certificates: [fs.readFileSync("./idp.pem").toString()]
 };
 var idp = new saml2.IdentityProvider(idp_options);
 
@@ -45,7 +47,6 @@ var idp = new saml2.IdentityProvider(idp_options);
 
 // Endpoint to retrieve metadata
 app.get("/metadata.xml", function(req, res) {
-    console.log(req);
   res.type('application/xml');
   res.send(sp.create_metadata());
 });
@@ -65,17 +66,21 @@ app.get("/login", function(req, res) {
 
 // Assert endpoint for when login completes
 app.post("/assert", function(req, res) {
-    console.log(req);
-  var options = {request_body: req.body, allow_unencrypted_assertion : true, require_session_index : false};
+  var options = {
+    request_body: req.body, 
+    allow_unencrypted_assertion : true, 
+    require_session_index : false
+  };
   sp.post_assert(idp, options, function(err, saml_response) {
-      console.log(saml_response);
-    if (err != null) {
-        console.log(err);
+    console.log('saml_response:', saml_response);
+
+    if (err) {
+      console.log('SAML post_assert error:', err);
       return res.status(500).json(err);
     }
 
     // Save name_id and session_index for logout
-    // Note:  In practice these should be saved in the user session, not globally.
+    // Note: In practice these should be saved in the user session, not globally.
 
     var name_id = saml_response.user.name_id;
     var session_index = saml_response.user.session_index;
@@ -90,7 +95,7 @@ app.post("/assert", function(req, res) {
       sessionIndex: session_index,
       name: name,
       email: email,
-      sp_domain: process.env.SP_DOMAIN
+      base_url: 'http://' + process.env.SP_DOMAIN + ':' + PORT
     });
   });
 });
@@ -111,17 +116,10 @@ app.get("/logout", function(req, res) {
 
 app.get("/silentauth-callback", function(req,res) {
   res.render('silentauth-callback', { 
-    sp_domain : process.env.SP_DOMAIN
+    base_url: 'http://' + process.env.SP_DOMAIN + ':' + PORT
   });
 });
 
-https = require('https');
-var secureServer = https.createServer({
-  key: fs.readFileSync('./certs/server.key'),
-  cert: fs.readFileSync('./certs/server.crt'),
-  ca: fs.readFileSync('./certs/ca.crt'),
-  requestCert: true,
-  rejectUnauthorized: false
-}, app).listen('443', function() {
-  console.log("Secure Express server listening on port 443");
+app.listen(PORT, function() {
+  console.log('SP server, listening on port', PORT);
 });
