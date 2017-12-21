@@ -113,12 +113,6 @@ app.get('/logout', function(req, res) {
   });
 });
 
-app.get('/silentauth-callback', function(req,res) {
-  res.render('silentauth-callback', { 
-    base_url: 'http://' + process.env.SP_DOMAIN + ':' + PORT
-  });
-});
-
 app.listen(PORT, function() {
   console.log('SP server, listening on port', PORT);
 });

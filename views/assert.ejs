@@ -2,6 +2,7 @@
   var webAuth = new auth0.WebAuth({
     domain:       '<%= auth0_domain %>',
     clientID:     '<%= auth0_frontend_client_id %>',
+    redirectUri:  '<%= base_url %>'
   });
 
   function guid() {
@@ -23,13 +24,11 @@
       var state = guid();
       window.localStorage.setItem('state', state);
 
-      webAuth.renewAuth({
+      webAuth.checkSession({
         scope: 'openid profile read:foo',
         audience: '<%= api_audience %>',
         responseType: 'token',
-        state: state,
-        usePostMessage: true, 
-        redirectUri: '<%= base_url %>/silentauth-callback'
+        state: state
       }, function(err, authResult){
         console.log('authResult:', authResult);
 
@@ -65,7 +64,7 @@
     $('#logout-user').click(function (e) {
       e.preventDefault();
       window.localStorage.removeItem('access_token');
-      webAuth.logout({client_id:'<%= auth0_sp_client_id%>', returnTo: '<%= base_url%>/', federate: true});
+      webAuth.logout({client_id:'<%= auth0_sp_client_id %>', returnTo: '<%= base_url %>/', federate: true});
     });
   });
 </script>
